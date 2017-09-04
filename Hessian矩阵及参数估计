@@ -1,0 +1,20 @@
+#########################
+##Hessian矩阵及参数估计##
+#########################
+
+#牛顿迭代法
+fori=1 to N
+  lambda(i)=1/(1+exp(-bx(i)))
+  for j=1 to K
+    dlnL(j)=dlnL(j)+(y(i)-lambda(i)*x(i,j))
+      for k= 1 to K
+      hesse(k,j)=hesse(k,j)-Lambda(i)*(1-lambda(i))*x(i,k)*x(i,j)
+      next k
+    next j
+lnL(iter)=lnL(iter)+y(i)*Log(1/1+exp(-bx(i)))+(1-y(i))*Log(1-1/(1+exp(-bx(i))))
+next i
+
+#求解Hessiam矩阵的逆矩阵,并计算矩阵dlnL和Hessian逆矩阵的乘积,记为hinvg
+for j=1 to K
+  b(j)=b(j)-hinvg(j)
+next j
