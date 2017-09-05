@@ -47,5 +47,11 @@ plot(density(outlier.scores)) #画出离群值得分的密度图
 
 outliers<-order(outlier.scores,decreasing = T)[1:5] #选出得分最高的5个离群值
 print(outliers) #输出得分最高的5个离群值的分数
-print(iris2[outliers,])
+print(iris2[outliers,])#输出离群值及其对应的分数，选取iris2中离群值的行数
 
+#绘制基于前两个主成分绘制离群值的双标图
+n<-nrow(iris2)
+labels<-1:n
+labels[-outliers]<-"."
+biplot[prcomp(iris2),cex=0.8,xlabs=labels]#无法实现，报错
+ 
