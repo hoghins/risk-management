@@ -32,3 +32,12 @@ library(earth)
 marsModel<-earth(credit_risk~.,data=quant_GermanCredit)
 ev<-evimp(marsModel)
 ev
+
+
+#方法4：通过自变量的逐步回归法
+base.mod<-lm(credit_risk~1,data=quant_GermanCredit) #获取线性回归模型的截距，为什么是1呢？
+all.mod<-lm(credit_risk~.,data =quant_GermanCredit) #获取完整的线性回归模型
+stepMod<-step(base.mod,scope = list(lower=base.mod,upper=all.mod),direction = "both",trace = 0,steps = 1000) #采用双向逐步回归法，筛选变量
+shortlistedVars<-names(unlist(stepMod[[1]])) #获取逐步回归得到的变量列表
+shortlistedVars<-shortlistedVars[!shortlistedVars%in%"[Intercept]"] #删除逐步回归的截距
+print(shortlistedVars) #输出逐步回归后得到的变量
