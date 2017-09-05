@@ -61,3 +61,24 @@ print(boruta_signif) #输出自变量中对违约状态影响最显著的排序�
 plot(boruta_output,cex.axis=.7,las=2,xlab = "",main="Variable Importance") #绘制变量显著性表示的箱图
 
 
+
+#定性指标的筛选方法
+library(InformationValue)
+library(klaR)
+credit_risk<-ifelse(train_kfolddata[,"credit_risk"]=="good",0,1) #违约状态变量用0和1表示，0表示正常，1表示违约
+tmp<-train_kfolddata[,-21]
+data<-cbind(tmp,credit_risk) #列合并
+#提取数据集中全部的定性指标
+factor_vars<-c("status","credit_history","purpose","savings","employment_duration","personal_status_sex","other_debtors","property","other_installment_plans","housing","job","telephone","foreign_worker") #获取所有名义自变量
+all_iv<-data.frame(VARS=factor_vars,IV=numeric(length(factor_vars)),STRENGTH=character(length(factor_vars)),stringsAsFactors = F) #初始化待输出的数据框
+ 
+factor_var<-c()
+for(factor_var in factor_vars)
+{
+  all_iv[all_iv$VARS==factor_var,"IV"]<-InformationValue::IV(X=data[,factor_var],Y=data$credit_risk) #计算每一个指标的IV值
+  all_iv[all_iv$VARS==factor_var,"STRENGTH"]<-attr(InformationValue::IV(X=data[,factor_var],Y=data$credit_risk),"howgood") #提取每个IV指标的描述
+}
+all_iv<-all_iv[order(-all_iv$IV),] #排序IV,-all_iv$IV表示降序排列
+
+
+
