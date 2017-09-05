@@ -48,3 +48,16 @@ stepMod<-step(base.mod,scope = list(lower=base.mod,upper=all.mod),direction = "b
 shortlistedVars<-names(unlist(stepMod[[1]])) #获取逐步回归得到的变量列表
 shortlistedVars<-shortlistedVars[!shortlistedVars%in%"[Intercept]"] #删除逐步回归的截距
 print(shortlistedVars) #输出逐步回归后得到的变量
+
+
+#方法5：“Boruta”方法
+#Boruta是一种特征选择算法。精确地说，它是随机森林周围的一种包装算法。这个包的名字来源是斯拉夫神话中一个居住在松林的恶魔。
+#我们知道，特征选择是预测模型中很关键的一步。当构建一个数据集包含多个变量的模型时，这个步骤尤为重要。
+#当你有兴趣了解变量相关性的价值，而不是只局限于建立一个具有良好的预测精度黑盒的预测模型时候，用boruta算法来处理这些数据集无疑是最佳选择。
+library(Boruta)
+boruta_output<-Boruta(credit_risk~.,data=na.omit(quant_GermanCredit),doTrace=2) #采用“Boruta”法，搜索自变量中对违约状态影响最显著的指标
+boruta_signif<-names(boruta_output$finalDecision[boruta_output$finalDecision %in%c("Confirmed","Tentative")]) #获取自变量中确定的和试验性的指标
+print(boruta_signif) #输出自变量中对违约状态影响最显著的排序指标
+plot(boruta_output,cex.axis=.7,las=2,xlab = "",main="Variable Importance") #绘制变量显著性表示的箱图
+
+
