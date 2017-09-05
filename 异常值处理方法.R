@@ -55,3 +55,24 @@ labels<-1:n
 labels[-outliers]<-"."
 biplot[prcomp(iris2),cex=0.8,xlabs=labels]#无法实现，报错
  
+#方法三：基于聚类方法的离群值检测
+#根据样本的分布将样本聚为若干个群簇，远离这些群簇中心点的值被定义为离群值
+library(DMwR)
+iris2<-iris[,1:4] #删除字符型变量
+kmeans.result<-kmeans(iris2 ,centers = 3)  #进行k-means聚类，并将样本聚为3类
+kmeans.result$centers #输出3个聚类的中心
+kmeans.result$cluster #标出样本属于哪一类的ID
+centers<-kmeans.result$centers[kmeans.result$cluster,]#分别确定每个样本的中心点
+distances<-sqrt(rowSums((iris2-centers)^2)) #计算每个样本到3个聚类中心的距离
+outliers<-order(distances,decreasing = T)[1:5] #选出距离聚类中心最远的5个样本，作为离群值
+print(outliers) #输出离群值与聚类中心的距离
+print(iris2[outliers,]) #输出离群值
+#画出离群值，用“*”表示3个聚类的中心，用“+”表示离群值
+plot(iris2[,c("Sepal.Length","Sepal.Width")],pch="o",col=kmeans.result$cluster,cex=0.3)
+points(kmeans.result$centers[,c("Sepal.Length","Sepal.Width")],col=1:3,pch=8,cex=1.5) #将聚类中心分别用红色、绿色、黑色的“*”表示
+points(iris2[outliers,c("Sepal.Length","Sepal.Width")],pch="+",col=4,cex=1.5) #将离群值用蓝色的“+”表示
+
+library(klaR)
+data("GermanCredit")
+summary(GermanCredit)
+                                                                                                                       
