@@ -5,8 +5,15 @@
 #3.通过自变量间的广义交叉验证
 #4.通过自变量的逐步回归法
 #5.采用“Boruta”法
+
 library(InformationValue)
 library(klaR)
+data(GermanCredit)
+
+train_kfold<-sample(nrow(GermanCredit),800,replace = F) #无放回随机抽取5份的4份，即抽取80%的样本作为样本集用作模型开发
+train_kfolddata<-GermanCredit[train_kfold,] #提取样本集数据
+train_kfolddata<-GermanCredit[-train_kfold,] #提取测试集数据
+
 credit_risk<-ifelse(train_kfolddata[,"credit_risk"]=="good",0,1) #将违约样本用“1”表示，正常样本用”0“表示
 tmp<-train_kfolddata[,-21] #将原来的good类的删掉
 data<-cbind(tmp,credit_risk)
