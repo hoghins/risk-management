@@ -3,6 +3,9 @@
 #2.分层抽样
 #3.整群抽样
 
+library(klaR)
+data("GermanCredit")
+
 #方法1：简单随机抽样
 #分为：有放回抽样和无放回抽样
 #均可用sample()函数
