@@ -127,4 +127,72 @@ WOE<-log((as.numeric(tt.tbl[,"good"])/700)/(as.numeric(tt.tbl[,"bad"])/300))
 all.tbl<-cbind(tt.tbl,WOE) #WOE列合并贴到tt.tbl上面
 all.tbl
 
+##对离散变量做必要的降维处理和WOE值的计算
+#首先要看下入模定性指标的概况
+library(klaR)
+data("GermanCredit")
+discrete_data<-GermanCredit[,c("status","credit_history","savings","purpose","credit_risk")]
+summary(discrete_data) #查看输入入模定性指标的概况
+
+
+#吊轨的书上说purpose的维数为10，我自己的电脑跑出来是维数为7，但是明显也比其他定性指标要高很多了
+#为了避免造成“维度灾难”，需要进行降维处理
+#在评级模型开发中的降维处理方法中，通常采用的是将属性相似的合并处理
+
+#对purpose进行降维处理
+library(klaR)
+data("GermanCredit")
+
+discrete_data<-GermanCredit[,c("status","credit_history","savings","purpose","property","credit_risk")]
+#对指标进行降维
+x<-discrete_data[,c("purpose","credit_risk")]
+d<-as.matrix(x)
+for(i in 1:nrow(d))
+{
+        #合并car(new)、car(used)
+        if(as.character(d[i,"purpose"])=="car(new)")
+        {
+                d[i,"purpose"]<-as.character("car(new/used)")
+        }
+        if(as.character(d[i,"purpose"])=="car(used)")
+        {
+                d[i,"purpose"]<-as.character("car(new/used)")
+        }
+        #合并radio/television\furniture/equipment
+        if(as.character(d[i,"purpose"])=="radio/television")
+        {
+                d[i,"purpose"]<-as.character("radio/television/furniture/equipment")
+        }
+        if(as.character(d[i,"purpose"])=="furniture/equipment")
+        {
+                d[i,"purpose"]<-as.character("radio/television/furniture/equipment")
+        }
+        #合并others\repairs\business
+        if(as.character(d[i,"purpose"])=="others")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")        
+        }
+        if(as.character(d[i,"purpose"])=="repairs")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")
+        }
+        if(as.character(d[i,"purpose"])=="business")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")
+        }
+        #合并retraing、education
+        if(as.character(d[i,"purpose"])=="retraining")
+        {
+                d[i,"purpose"]<-as.character("retraining/education")
+        }
+        if(as.character(d[i,"purpose"])=="education")
+        {
+                d[i,"purpose"]<-as.character("retraining/education")
+        }
+}
+
+new_data<-cbind(discrete_data[,c(-4,-6)],d) #将第四列和第六列删去后，再补上一个d的列
+woemodel<-woe(credit_risk~.,data = new_data,zeroadj=0.5,applyontrain=TRUE) #计算WOE
+woemodel$woe #输出WOE
+
 
