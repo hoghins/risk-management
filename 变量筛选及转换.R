@@ -94,5 +94,5 @@ all_iv<-all_iv[order(-all_iv$IV),] #排序IV,-all_iv$IV表示降序排列
 #该算法采用ctree()函数
 
 library(party)
-ctree()
+
 
