@@ -94,5 +94,37 @@ all_iv<-all_iv[order(-all_iv$IV),] #排序IV,-all_iv$IV表示降序排列
 #该算法采用ctree()函数
 
 library(party)
+#对定量入模指标进行最优分段算法
+#对变量"duration“进行最优分段
+library(smbinning)
+result=smbinning(df=data,y="credit_risk",x="duration",p=0.05)
+result$ivtable
+#对变量“amount”进行最优分段
+result=smbinning(df=data,y="credit_risk",x="amount",p=0.05)
+result$ivtable
+#对变量“age”进行最优分段
+result=smbinning(df=data,y="credit_risk",x="age",p=0.05)
+result$ivtable
+#由于变量“installment_rate”的取值只有四个值，不适用最优分段算法，只能用等级算法
+#总结：根据变量的值来确定，如果取值不够多，就只能采用等距分段了
+library(klaR)
+data("GermanCredit")
+install_data<-GermanCredit[,c("installment_rate","credit_risk")]
+tbl<-table(install_data)
+total<-list()
+for(i in 1:nrow(tbl))
+{
+        total[i]<-sum(tbl[i,]) #一行一行的来
+}
+t.tbl<-cbind(tbl,total)
+GoodRate<-as.numeric(t.tbl[,"good"])/as.numeric(t.tbl[,"total"])
+BadRate<-as.numeric(t.tbl[,"bad"])/as.numeric(t.tbl[,"total"])
+gb.tbl<-cbind(t.tbl,GoodRate,BadRate)
+Odds<-GoodRate/BadRate
+LnOdds<-log(Odds)
+tt.tbl<-cbind(gb.tbl,Odds,LnOdds)
+WOE<-log((as.numeric(tt.tbl[,"good"])/700)/(as.numeric(tt.tbl[,"bad"])/300))
+all.tbl<-cbind(tt.tbl,WOE) #WOE列合并贴到tt.tbl上面
+all.tbl
 
 
