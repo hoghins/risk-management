@@ -133,3 +133,37 @@ for(i in 1:nrow(tbl))
 }
 t.tbl<-cbind(tbl,total)
 GoodRate<-as.numeric(t.)
+BadRate<-as.numeric(t.tbl[,"1"])/as.numeric(t.tbl[,"total"])
+gb.tbl<-cbind(t.tbl,Odds,BadRate)
+Odds<-GoodRate/BadRate
+LnOdds<-log(Odds)
+(tt.tbl<-cbind(gb.tbl,Odds,LnOdds))
+WoE<-log((as.numeric(tt.tbl[,"0"])/700)/(as.numeric(tt.tbl[,"1"])/300))
+all.tbl<-cbind(tt.tbl,WoE)
+all.tbl
+install_rate_Cutpoint<-c()
+install_rate_WoE<-c()
+installment_rate<-data[,"installment_rate"]
+for(i in 1:length(installment_rate))
+{
+        if(installment_rate[i]==1)
+        {
+                install_rate_Cutpoint[i]<-"=1"
+                install_rate_WoE[i]<-0.2513144
+        }
+        if(installment_rate[i]==2)
+        {
+                install_rate_Cutpoint[i]<-"=2"
+                install_rate_WoE[i]<-0.1554665
+        }
+        if(installment_rate[i]==3)
+        {
+                install_rate_Cutpoint[i]<-"=3"
+                install_rate_WoE[i]<-0.06453852
+        }
+        if(installment_rate[i]==4)
+        {
+                install_rate_Cutpoint[i]<-"=4"
+                install_rate_WoE[i]<-0.1573003
+        }
+}
