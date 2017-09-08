@@ -167,3 +167,54 @@ for(i in 1:length(installment_rate))
                 install_rate_WoE[i]<-0.1573003
         }
 }
+
+#定性指标的降维和WoE
+discrete_data<-data[,c("status","credit_history","savings","purpose","property","credit_risk")]
+summary(discrete_data)
+#对指标purpose进行降维
+x<-discrete_data[,c("purpose","credit_risk")]
+d<-as.matrix(x)
+for(i in 1:nrow(d))
+{
+        #合并car(new)、car(used)
+        if(as.character(d[i,"purpose"])=="car(new)")
+        {
+                d[i,"purpose"]<-as.character("car(new/used)")
+        }
+        if(as.character(d[i,"purpose"])=="car(used)")
+        {
+                d[i,"purpose"]<-as.character("car(new/used)")
+        }
+        #合并radio/television、furniture/equipment
+        if(as.character(d[i,"purpose"])=="radio/television")
+        {
+                d[i,"purpose"]<-as.character("radio/television/furniture/equipment")
+        }
+        if(as.character(d[i,"purpose"])=="furniture/equipment")
+        {
+                d[i,"purpose"]<-as.character("radio/television/furniture/equipment")
+        }
+        #合并others\repairs\business
+        if(as.character(d[i,"purpose"])=="others")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")
+        }
+        if(as.character(d[i,"purpose"])=="repairs")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")
+        }
+        if(as.character(d[i,"purpose"])=="business")
+        {
+                d[i,"purpose"]<-as.character("others/repairs/business")
+        }
+        #合并retraining、education
+        if(as.character(d[i,"purpose"])=="retraining")
+        {
+                d[i,"purpose"]<-as.character("retraining/education")
+        }
+        if(as.character(d[i,"purpose"])=="education")
+        {
+                d[i,"purpose"]<-as.character("retraining/education")
+        }
+}
+(new_data<-cbind(discrete_data[,c(-4,-6)],d))
