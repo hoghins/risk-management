@@ -218,3 +218,217 @@ for(i in 1:nrow(d))
         }
 }
 (new_data<-cbind(discrete_data[,c(-4,-6)],d))
+
+#替换原数据集中的“purpose”指标的值
+#计算WOE
+woemodel<-woe(credit_risk~.,data=new_data,zeroadj=0.5,applyontrain=TRUE)
+#输出WOE
+woemodel$woe
+#1.status
+status<-as.matrix(new_data[,"status"])
+colnames(status)<-"status"
+status_WoE<-c()
+for (i in 1:length(status))
+{
+        if(status[i]=="... < 100 DM")
+        {
+                status_WoE[i]<--0.7553785
+        }
+        if(status[i]=="0 <= ... < 200 DM")
+        {
+                status_WoE[i]<--0.4260422
+        }
+        if(status[i]=="... >= 200 DM / salary for at least 1 year")
+        {
+                status_WoE[i]<-0.3541628
+        }
+        if(status[i]=="no checking account")
+        {
+                status_WoE[i]<-1.1964794
+        }
+}
+#credit_history
+credit_history<-as.matrix(new_data[,"credit_history"])
+colnames(credit_history)<-"credit_history"
+credit_history_WoE<-c()
+for(i in 1:length(credit_history))
+{
+        if(credit_history[i]=="no credits taken/all credits paid back duly")
+        {
+                credit_history_WoE[i]<--1.43325824
+        }
+        if(credit_history[i]=="all credits at this bank paid back duly")
+        {
+                credit_history_WoE[i]<--0.83542124
+        }
+        if(credit_history[i]=="existing credits paid back duly till now")
+        {
+                credit_history_WoE[i]<--0.11018574
+        }
+        if(credit_history[i]=="delay in paying off in the past")
+        {
+                credit_history_WoE[i]<-0.07328118
+        }
+        if(credit_history[i]=="critical account/other credits existing")
+        {
+                credit_history_WoE[i]<-0.70502380
+        }
+}
+#3.savings
+savings<-as.matrix(new_data[,"savings"])
+colnames(savings)<-"savings"
+savings_WoE<-c()
+for(i in 1:length(savings))
+{
+        if(savings[i]=="... < 100 DM")
+        {
+                savings_WoE[i]<--0.26762879
+        }
+        if(savings[i]=="100 <= ... < 500 DM")
+        {
+                savings_WoE[i]<--0.08820683
+        }
+        if(savings[i]=="500 <= ... < 1000 DM")
+        {
+                savings_WoE[i]<-0.60494035
+        }
+        if(savings[i]=="... >= 1000 DM")
+        {
+                savings_WoE[i]<-1.02087675
+        }
+        if(savings[i]=="unknown/no savings account")
+        {
+                savings_WoE[i]<-0.68902346
+        }
+}
+#4.property
+property<-as.matrix(new_data[,"property"])
+colnames(property)<-"property"
+property_WoE<-c()
+for(i in 1:length(property))
+{
+        if(property[i]=="real estate")
+        {
+                property_WoE[i]<-0.53478699
+        }
+        if(property[i]=="buiding society saving agreement/life insurance")
+        {
+                property_WoE[i]<--0.07558268
+        }
+        if(property[i]=="car or other")
+        {
+                property_WoE[i]<--0.03137336
+        }
+        if(property[i]=="unknown/no property")
+        {
+                property_WoE[i]<--0.64126522
+        }
+}
+#5.purpose
+purpose<-as.matrix(new_data[,"purpose"])
+colnames(purpose)<-"purpose"
+purpose_WoE<-c()
+for(i in 1:length(purpose))
+{
+        if(purpose[i]=="car(new/used)")
+        {
+                purpose_WoE[i]<--0.1200509
+        }
+        if(purpose[i]=="domestic appliances")
+        {
+                purpose_WoE[i]<-0.4657153
+        }
+        if(purpose[i]=="others/repairs/business")
+        {
+                purpose_WoE[i]<--0.1585346
+        }
+        if(purpose[i]=="radio/television/furniture/equipment")
+        {
+                purpose_WoE[i]<--0.1022687
+        }
+        if(purpose[i]=="retraining/education")
+        {
+                purpose_WoE[i]<--0.5169675
+        }
+}
+#入模定量和定性指标
+model_data<-cbind(data[,quant_model_vars],data[,qual_model_vars])
+credit_risk<-as.matrix(data[,"credit_risk"])
+colnames(credit_risk)<-"credit_risk"
+#入模定量和定性指标的WoE
+model_data_WoE<-as.data.frame(cbind(duration_WoE,amount_WoE,age_WoE,install_rate_WoE,status_WoE,credit_history_WoE,savings_WoE,property_WoE,purpose_WoE,credit_risk))
+#入模定量和定性指标的“分段"
+model_data_Cutpoint<-cbind(duration_Cutpoint,amount_Cutpoint,age_Cutpoint,install_rate_Cutpoint,status,credit_history,savings,property,purpose)
+#逻辑回归
+m<-glm(credit_risk~.,data = model_data_WoE,family = binomial())
+alpha_beta<-function(basepoints,baseodds,pdo)
+{
+        beta<-pdo/log(2)
+        alpha<-basepoints+beta*log(baseodds)
+        return(list(alpha,beta=beta))
+}
+coefficients<-m$coefficients
+#特定比率（1/20）的特定分值（50）和比率翻番的分数（10），计算评分卡的系数alpha和beta
+(x<-alpha_beta(50,0.05,10))
+#计算基础分值
+basepoint<-round(x$alpha-x$beta*coefficients[1])
+#1.duration_score
+duration_score<-round(as.matrix(-(model_data_WoE[,"duration_WoE"]*coefficients["duration_WoE"]*x$beta)))
+colnames(duration_score)<-"duration_score"
+#2.amount_score
+amount_score<-round(as.matrix(-(model_data_WoE[,"amount_WoE"]*coefficients["amount_WoE"]*x$beta)))
+colnames(amount_score)<-"amount_score"
+#3.age_score
+age_score<-round(as.matrix(-(model_data_WoE[,"age_WoE"]*coefficients["age_WoE"]*x$beta)))
+colnames(age_score)<-"age_score"
+#4.install_rate_score
+(install_rate_score<-round(as.matrix(-(model_data_WoE[,"install_rate_WoE"]*coefficients["install_rate_WoE"]*x$beta))))
+colnames(install_rate_score)<-"install_rate_score"
+#5.status_score
+status_score<-round(as.matrix(-(model_data_WoE[,"status_WoE"]*coefficients["status_WoE"]*x$beta)))
+colnames(status_score)<-"status_score"
+#6.credit_history
+credit_history_score<-round(as.matrix(-(model_data_WoE[,"credit_history_WoE"]*coefficients["credit_history_WoE"]*x$beta)))
+colnames(credit_history_score)<-"credit_history_score"
+#7.savings_score
+savings_score<-round(as.matrix(-(model_data_WoE[,"savings_WoE"]*coefficients["savings_WoE"]*x$beta)))
+colnames(savings_score)<-"savings_score"
+#8.property_score
+property_score<-round(as.matrix(-(model_data_WoE[,"property_WoE"]*coefficients["property_WoE"]*x$beta)))
+colnames(property_score)<-"property_score"
+#9.purpose_score
+purpose_score<-round(as.matrix(-(model_data_WoE[,"purpose_WoE"]*coefficients["purpose_WoE"]*x$beta)))
+colnames(purpose_score)<-"purpose_score"
+#输出最终的csv格式的打分卡
+#1.基础分值
+r1<-c("","basepoint",19)
+(m1<-matrix(r1,nrow=1))
+colnames(m1)<-c("Basepoint","Basepoint","Score")
+m1
+#2.duration的分值
+(duration_scoreCard<-cbind(as.matrix(c("Duration","",""),ncol=1),unique(cbind(duration_Cutpoint,duration_score)))) #unique()去重
+#3.age的分值
+(age_scoreCard<-cbind(as.matrix(c("Installment_Rate","","",""),ncol=1),unique(cbind(install_rate_Cutpoint,install_rate_score))))
+#4.install_rate的分值
+(install_rate_scoreCard<-cbind(as.matrix(c("installment_Rate","","",""),ncol=1),unique(cbind(install_rate_Cutpoint,install_rate_score))))
+#5.status的分值
+(status_scoreCard<-cbind(as.matrix(c("Status","","",""),ncol=l),unique(cbind(status,status_score))))
+#6.credit_history的分值
+(credit_history_scoreCard<-cbind(as.matrix(c("Credit_History","","","",""),ncol=1),unique(cbind(credit_history,credit_history_score))))
+#7.savings的分值
+(savings_scoreCard<-cbind(as.matrix(c("Savings","","","",""),ncol=1),unique(cbind(savings,savings_score))))
+#8.property的分值
+(property_scoreCard<-cbind(as.matrix(c("Property","","",""),ncol=1),unique(cbind(property,property_score))))
+#9.purpose的分值
+(purpose_scoreCard<-cbind(as.matrix(c("Purpose","","","",""),ncol=1),unique(cbind(purpose,purpose_score))))
+
+scoreCard_CSV<-rbind(m1,
+                     duration_scoreCard,
+                     age_scoreCard,
+                     install_rate_scoreCard,
+                     status_scoreCard,
+                     credit_history_scoreCard,
+                     savings_scoreCard,
+                     property_scoreCard,
+                     purpose_scoreCard)
+write.csv(scoreCard_CSV,"D:/Users/caiyue/Documents/scoreCard.csv")
